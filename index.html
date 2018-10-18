@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<link rel="stylesheet" href="./static/css/vant.min.css">
+	<link rel="stylesheet" href="./static/css/style.css">
+	<title>付款</title>
+</head>
+
+<body>
+
+	<div id="app" v-cloak :style="show?'margin-top:-160px;':''">
+		<div class="row top">
+			<div class="left">
+				<div class="key">付款给商家</div>
+				<div class="value">昵称：{{sjname}}</div>
+			</div>
+			<a :href="logo" target="blank" class="logo">
+				<img :src="logo" class="logo" alt="">
+			</a>
+		</div>
+
+		<block v-for="(row, rowIndex) in listData">
+			<div class="row select">
+				<div class="main" @click="handleShowList(rowIndex)">
+					<div class="left">
+						<div class="key" v-if="row.value === '' && rowIndex === 0"> 请选择学校...</div>
+						<div class="key" v-else-if="row.value === '' && rowIndex === 1">请选择年级...</div>
+						<div class="key" v-else-if="row.value === '' && rowIndex === 2">请选择班级...</div>
+						<div class="value" v-else-if="row.value !== ''">{{ row.value }}</div>
+					</div>
+					<img src="./static/img/up.png" class="icon" :class="row.show ? 'down':''" alt="">
+				</div>
+
+				<ul class="list" v-show="row.show">
+					<block v-for="(item, index) in row.ulList">
+						<li class="item" :key="index" v-text="item.title" @click="handleChoose(rowIndex,index, item.id, item.title)"></li>
+					</block>
+				</ul>
+			</div>
+		</block>
+
+		<label class="row input" id="name">
+			<div class="key">姓名</div>
+			<input type="text" name="name" id="name" value="name" v-model="name" placeholder="请输入姓名...">
+		</label>
+		<textarea class="content" placeholder="备注" v-model="content" value="content"></textarea>
+		<div class="row money">
+			<div class="key">金额</div>
+			<div class="moneyBox" @click.stop="show = true">
+				<div class="unit">￥</div>
+				<div class="num" :class="show?'blur':''">{{price}}</div>
+			</div>
+			<div class="submit" :class="price === ''?'nogith':''" @click="handleSubmit">付款</div>
+		</div>
+		<van-number-keyboard
+			:show="show"
+			theme="custom"
+			extra-key="."
+			close-button-text="完成"
+			@blur="show = false"
+			@input="onInput"
+			@delete="onDelete"
+		/>
+	</div>
+	<script src="./static/js/vue.min.js"></script>
+	<script src="./static/js/vant.min.js"></script>
+	<script src="./static/js/axios.min.js"></script>
+	<script>
+		Vue.use(vant)
+
+		var app = new Vue({
+			el: '#app',
+			data: {
+				sjname: '',
+				logo: './static/img/logo.png',
+				text: 'Hello Vue',
+				show: false,
+				name: '',
+				price: '',
+				content: '',
+				listData: [{
+					show: false,
+					id: '',
+					value: '',
+					ulList: []
+				}, {
+					show: false,
+					id: '',
+					value: '',
+					ulList: [],
+					parentIndex: 0
+				}, {
+					show: false,
+					id: '',
+					value: '',
+					ulList: []
+				}],
+				getData: [
+				]
+			},
+			created: function(){
+				vant.Toast.loading({
+				  mask: true,
+				  message: '加载中...'
+				});
+				if(document.cookie.indexOf('openid') === -1){
+					window.location.href = 'http://letao.xtow.net/api.php/login/index';
+				}
+			},
+			mounted: function () {
+				let that = this;
+
+				axios.get('http://letao.xtow.net/api.php/index').then(({data})=> {
+					that.getData = data.cate;
+					that.sjname = data.name;
+					that.logo = data.logo;
+
+					that.listData[0].ulList = [];
+					this.getData.map((item, index) => {
+						that.listData[0].ulList.push({
+							id: item.id,
+							title: item.title
+						});
+					});
+					vant.Toast.clear();
+				}).catch(e=> {
+					vant.Toast.fail('网络异常, 请刷新重试')
+				})
+			},
+			methods: {
+				// 显示隐藏列表
+				handleShowList(rowIndex) {
+					if (rowIndex === 1 && this.listData[rowIndex-1].value === '') {
+						return vant.Toast('请先选择学校');
+					} else if (rowIndex === 2 && this.listData[rowIndex-1].value === '') {
+						return vant.Toast('请先选择年级');
+					}
+
+					if (this.listData[rowIndex].ulList.length === 0) {
+						return vant.Toast('暂无数据,请在后台添加');
+					};
+					this.listData.forEach((item, index) => {
+						if (rowIndex !== index) {
+							item.show = false;
+						} else {
+							item.show = !item.show;
+						}
+					})
+				},
+				// 选择
+				handleChoose(rowIndex, itemIndex, id, value) {
+					this.listData[rowIndex].id = id;
+					this.listData[rowIndex].show = false;
+					this.listData[rowIndex].value = value;
+
+					if (rowIndex === 0) {
+						this.__erKistData(itemIndex);
+						this.listData[1].id = '';
+						this.listData[1].value = '';
+						this.listData[1].parentIndex = 0;
+						this.listData[2].id = '';
+						this.listData[2].value = '';
+					} else if (rowIndex === 1) {
+						this.__sanKistData(itemIndex);
+						this.listData[2].id = '';
+						this.listData[2].value = '';
+					}
+				},
+				// 二级分类数据获取
+				__erKistData(index) {
+					let that = this;
+					that.listData[1].ulList = this.getData[index].list;
+					that.listData[1].parentIndex = index;
+				},
+				// 三级分类数据获取
+				__sanKistData(index) {
+					let that = this;
+					let parentIndex = this.listData[1].parentIndex;
+					that.listData[2].ulList = this.getData[parentIndex].list[index].list;
+				},
+				handleSubmit(){
+					let price = this.price;
+					let name = this.name;
+					let content = this.content;
+					if(price === ''){
+						return ;
+					}
+
+					if(name === ''){
+						return vant.Toast.fail('请填写姓名');
+					}
+
+					let postData = {
+						name: name,
+						content: content,
+						price: price,
+						school: this.listData[0].id, // school 学校
+						grade: this.listData[1].id, // grade 班级
+						class: this.listData[2].id, // 班级
+					}
+					let that = this;
+					axios.post('http://letao.xtow.net/api.php/index/pay', postData).then(({data})=> {
+						console.log(data)
+						that.wxPlay(data)
+					}).catch(e=> {
+						console.log(e)
+						vant.Toast.fail('网络异常, 请重新付款')
+					})
+					// console.log(postData)
+				},
+				wxPlay(data){
+					let that = this;
+					console.log(WeixinJSBridge)
+					if (typeof WeixinJSBridge == "undefined"){
+					   if( document.addEventListener ){
+					       document.addEventListener('WeixinJSBridgeReady', function(data){that.__onBridgeReady(data)}, false);
+					   }else if (document.attachEvent){
+					       document.attachEvent('WeixinJSBridgeReady',  function(data){that.__onBridgeReady(data)}); 
+					       document.attachEvent('onWeixinJSBridgeReady' , function(data){that.__onBridgeReady(data)});
+					   }
+					}else{
+					   that.__onBridgeReady(data);
+					}
+				},
+				__onBridgeReady(data){
+				   WeixinJSBridge.invoke(
+				      'getBrandWCPayRequest', {
+				         "appId": data.appId,     //公众号名称，由商户传入     
+				         "timeStamp": data.timeStamp,         //时间戳，自1970年以来的秒数     
+				         "nonceStr": data.nonceStr, //随机串     
+				         "package": data.package,     
+				         "signType": data.signType,         //微信签名方式：     
+				         "paySign": data.paySign //微信签名 
+				      },
+				      function(res){
+				      	console.log(res)
+				      if(res.err_msg == "get_brand_wcpay_request:ok" ){
+				      // 使用以上方式判断前端返回,微信团队郑重提示：
+				            //res.err_msg将在用户支付成功后返回ok，但并不保证它绝对可靠。
+				      } 
+				   }); 
+				},
+
+				onInput(value) {
+					
+					// 刚开始是小数点
+					if(!this.price.length && value === '.'){
+						return;
+					}
+
+					let price = this.price + value;
+					let dianLen = price.length - price.replace(/\./g, '').length;
+					
+					// 长度大于7 百万 7位数 + 小数点
+					if(dianLen === 0 && price.length>7){
+						return;
+					}
+					console.log(dianLen, this.price, value)
+					if(dianLen === 0 && this.price && this.price[0] === '0' && value === 0){
+						return;
+					}
+					// 如果小数点大于2个
+					if(dianLen > 1){
+						return;
+					} 
+					// 如果小数点1个 小数点后只能2位
+					if(dianLen === 1){
+						let dianPos = price.indexOf('.');
+						let dianAfterNumLen = price.substr(dianPos+1).length;
+						if(dianAfterNumLen > 2){
+							return;
+						}
+					}
+					this.price = this.price += value
+				},
+				onDelete() {
+					this.price = this.price.substr(0,this.price.length-1)
+				}
+			}
+		})
+	</script>
+
+</body>
+
+</html>

@@ -1,14 +1,167 @@
 // out: style.css, compress: true, sourceMap: false, autoprefixer: > 5%; last 2 Chrome versions; not ie 6-9
-body{
-    background: #f3f3f3;
+body {
+	background: #f3f3f3;
     padding: 12px;
-    #app{
-        .row{
-            background: #fff;
-            border-radius: 4px;
-            box-shadow: 0 0 5px #eee;
-            padding: 0 20px;
-            margin-bottom: 5px;
+    font-family: '微软雅黑';
+    [v-cloak]{  
+        display: none;  
+    }  
+	#app {
+		font-size: 14px;
+		div {
+			box-sizing: border-box;
+        }
+		.row {
+            display: block;
+			background: #fff;
+			border-radius: 4px;
+			box-shadow: 0 0 5px #eee;
+			padding: 0 20px;
+			margin-bottom: 5px;
+			.value {
+				color: #a9a9a9;
+				line-height: 20px;
+			}
+			&.top {
+				padding-top: 20px;
+				padding-bottom: 14px;
+				display: flex;
+				justify-content: space-between;
+				.left {
+					.key {
+						margin-bottom: 2px;
+					}
+				}
+				.logo {
+					width: 40px;
+					height: 40px;
+					border-radius: 4px;
+					display: block;
+					img {
+						width: 100%;
+						height: 100%;
+					}
+				}
+			}
+			&.select {
+				// display:
+				padding: 0;
+				.main {
+					width: 100%;
+					background: #fbfbfb;
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+					padding: 10px 20px;
+					.value {
+						color: #666;
+						padding-right: 20px;
+					}
+					.icon {
+						width: 12px;
+						height: 6px;
+						&.down {
+							transform: rotateX(180deg);
+						}
+					}
+				}
+				.list {
+					padding: 0px 12px;
+					border-top: 1px solid #eee;
+					.item {
+						color: #a9a9a9;
+						border-bottom: 1px solid #eee;
+						padding: 10px 8px;
+						display: block;
+						line-height: 20px;
+						&:active {
+							background: #eee;
+						}
+					}
+				}
+            }
+            &.input{
+                display: flex;
+                align-items: center;
+                padding: 10px 20px;
+                .key{
+                    width: 80px;
+                }
+                input{
+                    flex: 1;
+                    height: 100%;
+                    border: none;
+                    font-size: 14px;
+                }
+            }
+            &.money{
+                padding: 10px 20px;
+                .key{
+                    color: #a9a9a9;
+                    font-size: 12px;
+                }
+                .moneyBox{
+                    margin: 5px 0;
+                    font-weight: bold;
+                    display: flex;
+                    border-bottom: 1px solid #eee;
+                    padding: 5px 0;
+                    .unit{
+                        font-size: 34px;
+                        position: relative;
+                        left: -8px;
+                        top: 2px;
+                    }
+                    .num{
+                        height: 52px;
+                        font-size: 40px;
+                        padding-right: 4px;
+                        position: relative;
+                        &.blur::after{
+                            content: '';
+                            width: 2px;
+                            height: 100%;
+                            position: absolute;
+                            top: 0;
+                            right: 0;
+                            background: #000;
+                            animation: moneyLineShow 1s infinite;
+                            animation-direction: alternate;
+                        }
+                    }
+                    @keyframes moneyLineShow {
+                        0%{
+                            opacity: 1;
+                        }
+                        100%{
+                            opacity: 0;
+                        }
+                    }
+                }
+                .submit{
+                    text-align: center;
+                    height: 42px;
+                    line-height: 42px;
+                    color: #fff;
+                    background: #1aac19;
+                    border-radius: 4px;
+                    border: 1px solid #2d902b;
+                    margin-top: 18px;
+                    margin-bottom: 30px;
+                    &.nogith{
+                        background: #a4dea3;
+                        border-color: #8dca8b;
+                        color: #d7f2d7;
+                    }
+                }
+            }
+        }
+        .content{
+            width: 100%;
+            height: 100px;
+            box-sizing: border-box;
+            border: none;
+            padding: 10px 20px;
         }
     }
 }
